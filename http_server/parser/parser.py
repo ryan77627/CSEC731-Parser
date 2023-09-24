@@ -11,7 +11,7 @@ class HTTPRequest:
         self.__req_path = ""
 
     def __str__(self):
-        return f"Method: {self.__method}, Requested HTTP version: {self.__req_version}, Path: {self.__req_path}, Headers: {self.__headers}"
+        return f"Method: {self.__method}, Requested HTTP version: {self.__req_version}, Path: {self.__req_path}, Headers: {self.__headers}, Body: \"{self.__body}\""
 
     def set_method(self, method):
         # Set the method
@@ -36,10 +36,14 @@ class HTTPRequest:
         # Expects ["key", "some values, are, here"]
         print(header)
         if header[0] not in self.__headers.keys():
-            self.__headers[header[0]] = header[1].split(",")
+            self.__headers[header[0]] = header[1].strip().split(",")
         else:
             for item in header[1].split(","):
                 self.__headers[header[0]].append(item)
+
+    def set_body_data(self, body_data):
+        # This will be a list, so we need to concatenate it back to proper form
+        self.__body = "\n".join(body_data) if body_data != [''] else ""
 
 
 def parse_http_data(data):
@@ -51,6 +55,20 @@ def parse_http_data(data):
 
     # Once we receive the data, parse it
     parse_first_header(data[0], request)
-    parse_headers(data[1:], request)
+
+    # Parse out the headers to a new list
+    headers = []
+    data_counter = 1
+    for i in range(len(data[1:])):
+        if data[i+1] == "":
+            # We have reached a blank line, which signals the end of the headers
+            break
+        else:
+            # Add header to list
+            headers.append(data[i+1])
+            data_counter += 1
+
+    parse_headers(headers, request)
+    request.set_body_data(data[data_counter+1:])
 
     print(request)
