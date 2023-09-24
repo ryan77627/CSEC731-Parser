@@ -1,0 +1,47 @@
+*   Trying 69.117.155.28:443...
+* Connected to rschanz.org (69.117.155.28) port 443 (#0)
+* found 160 certificates in /etc/ssl/certs/ca-certificates.crt
+* found 478 certificates in /run/current-system/profile/etc/ssl/certs
+* GnuTLS ciphers: NORMAL:-ARCFOUR-128:-CTYPE-ALL:+CTYPE-X509:-VERS-SSL3.0
+* ALPN: offers h2
+* ALPN: offers http/1.1
+* SSL connection using TLS1.3 / ECDHE_RSA_CHACHA20_POLY1305
+*   server certificate verification OK
+*   server certificate status verification SKIPPED
+*   common name: rschanz.org (matched)
+*   server certificate expiration date OK
+*   server certificate activation date OK
+*   certificate public key: EC/ECDSA
+*   certificate version: #3
+*   subject: CN=rschanz.org
+*   start date: Thu, 14 Sep 2023 15:25:14 GMT
+*   expire date: Wed, 13 Dec 2023 15:25:13 GMT
+*   issuer: C=US,O=Let's Encrypt,CN=R3
+* ALPN: server accepted h2
+* Using HTTP2, server supports multiplexing
+* Copying HTTP/2 data in stream buffer to connection buffer after upgrade: len=0
+* h2h3 [:method: GET]
+* h2h3 [:path: /]
+* h2h3 [:scheme: https]
+* h2h3 [:authority: rschanz.org]
+* h2h3 [user-agent: curl/7.85.0]
+* h2h3 [accept: */*]
+* Using Stream ID: 1 (easy handle 0xf0b6b0)
+> GET / HTTP/2
+> Host: rschanz.org
+> user-agent: curl/7.85.0
+> accept: */*
+> 
+* Connection state changed (MAX_CONCURRENT_STREAMS == 250)!
+< HTTP/2 200 
+< accept-ranges: bytes
+< alt-svc: h3=":443"; ma=2592000
+< content-type: text/html; charset=utf-8
+< date: Fri, 22 Sep 2023 21:05:15 GMT
+< etag: "s1eno14ly"
+< last-modified: Fri, 22 Sep 2023 21:00:01 GMT
+< server: Caddy
+< server: Caddy
+< content-length: 5974
+< 
+* Connection #0 to host rschanz.org left intact
