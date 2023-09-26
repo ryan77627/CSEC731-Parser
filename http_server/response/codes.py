@@ -20,6 +20,7 @@ class HTTPStatusCode(IntEnum):
     BAD_REQUEST = (400, "Bad Request", "Invalid Request or Unsupported method")
     UNAUTHORIZED = (401, "Unauthorized", "No permissions to access")
     FORBIDDEN = (403, "Forbidden", "Server forbidden to access")
+    NOT_FOUND = (404, "Not Found", "Server could not find the file requested")
 
     # Server Errors
     INTERNAL_ERROR = (500, "Internal Server Error", "The server cannot complete your request as given, try again :(")
