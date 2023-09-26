@@ -1,7 +1,7 @@
 from http_server.parser import parser
 from http_server.handlers import get,post,put,delete,head
 from http_server.response.response import HTTPResponse
-from http_server.response.codes import HTTPStatusCodes
+from http_server.response.codes import HTTPStatusCode
 
 def init():
     # Entrypoint for the HTTP Parser
@@ -33,6 +33,7 @@ def init():
         head.process_req(req)
     else:
         # Unimplemented method, return a 400 BAD REQUEST response
+        print(HTTPResponse(HTTPStatusCode.BAD_REQUEST))
 
 
 if __name__ == "__main__":
