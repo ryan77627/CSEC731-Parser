@@ -10,6 +10,10 @@ class HTTPRequest:
         self.__body = ""
         self.__req_path = ""
 
+    @property
+    def method(self):
+        return self.__method
+
     def __str__(self):
         return f"Method: {self.__method}, Requested HTTP version: {self.__req_version}, Path: {self.__req_path}, Headers: {self.__headers}, Body: \"{self.__body}\""
 
@@ -71,4 +75,4 @@ def parse_http_data(data):
     parse_headers(headers, request)
     request.set_body_data(data[data_counter+1:])
 
-    print(request)
+    return request
