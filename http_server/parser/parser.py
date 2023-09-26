@@ -5,7 +5,7 @@ from http_server.parser.headers import parse_headers as parse_headers
 class HTTPRequest:
     def __init__(self):
         self.__method = ""
-        self.__req_version = 0
+        self.__req_version = 0.9
         self.__headers = dict()
         self.__body = ""
         self.__req_path = ""
@@ -13,6 +13,10 @@ class HTTPRequest:
     @property
     def method(self):
         return self.__method
+
+    @property
+    def version(self):
+        return self.__req_version
 
     def __str__(self):
         return f"Method: {self.__method}, Requested HTTP version: {self.__req_version}, Path: {self.__req_path}, Headers: {self.__headers}, Body: \"{self.__body}\""
