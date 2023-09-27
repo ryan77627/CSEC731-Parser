@@ -1,4 +1,4 @@
-from multiprocessing import Process, Queue
+import multiprocessing
 import socket
 from http_server.parser import parser
 from http_server.handlers import get,post,put,delete,head
@@ -11,18 +11,24 @@ def init_listener():
     print("Listening on 53235")
     s.listen(5)
 
-    c,addr = s.accept()
-    # Get the data
-    data = c.recv(8192).decode("utf-8") # convert to string for use
-    resp = conn_handler(data).generate_bytes()
+    while True: # Main loop
+        c,addr = s.accept()
+        print(f"Got connection from {addr}")
+        # spawn connection
+        p = multiprocessing.Process(target=handle_connection, args=(c,addr))
+        p.daemon = True
+        p.start()
+
+def handle_connection(c,addr):
+    data = c.recv(8192).decode("utf-8")
+    resp = process_req(data).generate_bytes()
     c.send(resp)
 
-def conn_handler(s) -> HTTPResponse:
+def process_req(data) -> HTTPResponse:
     # Entrypoint for the HTTP Parser
-    # Right now this will load a given file
+    # Get the data
     # Parse!
-    req_list = s
-    req_list = req_list.replace('\r','')
+    req_list = data.replace('\r','')
     req_list = req_list.split('\n')
 
     req = parser.parse_http_data(req_list)
