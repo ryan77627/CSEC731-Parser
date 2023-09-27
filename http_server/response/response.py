@@ -44,3 +44,9 @@ class HTTPResponse:
         resp += self.__content
 
         return resp
+
+    def generate_bytes(self):
+        # Like __repr__ but returns bytes
+        resp = self.__repr__()
+
+        return resp.encode("utf-8")

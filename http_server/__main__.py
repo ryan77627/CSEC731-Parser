@@ -1,21 +1,33 @@
+from multiprocessing import Process, Queue
+import socket
 from http_server.parser import parser
 from http_server.handlers import get,post,put,delete,head
 from http_server.response.response import HTTPResponse
 from http_server.response.codes import HTTPStatusCode
 
-def init():
+def init_listener():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.bind(('', 53235))
+    print("Listening on 53235")
+    s.listen(5)
+
+    c,addr = s.accept()
+    # Get the data
+    data = c.recv(8192).decode("utf-8") # convert to string for use
+    resp = conn_handler(data).generate_bytes()
+    c.send(resp)
+
+def conn_handler(s) -> HTTPResponse:
     # Entrypoint for the HTTP Parser
     # Right now this will load a given file
-    filename = input("Enter test request filepath: ")
-    with open(filename) as f:
-        # Parse!
-        req_list = f.read()
-        req_list = req_list.replace('\r','')
-        req_list = req_list.split('\n')
+    # Parse!
+    req_list = s
+    req_list = req_list.replace('\r','')
+    req_list = req_list.split('\n')
 
-        req = parser.parse_http_data(req_list)
+    req = parser.parse_http_data(req_list)
 
-        resp_ver = req.version
+    resp_ver = req.version
 
     # Now that we have a request, let's parse it and send it to a handler
     if req.method == "GET":
@@ -39,4 +51,4 @@ def init():
 
 
 if __name__ == "__main__":
-    print(init()) # print used here as placeholder for socket connection
+    init_listener()
