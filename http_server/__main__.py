@@ -1,23 +1,44 @@
 import multiprocessing
+import argparse
 import socket
+import ssl
 from http_server.parser import parser
 from http_server.handlers import get,post,put,delete,head
 from http_server.response.response import HTTPResponse
 from http_server.response.codes import HTTPStatusCode
 
-def init_listener():
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.bind(('', 53235))
-    print("Listening on 53235")
-    s.listen(5)
+def init_listener(ip, port, ctx=None):
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        s.bind((ip, port))
+        if ctx != None:
+            # Enabling TLS
+            print("Enabling TLS!")
+            with ctx.wrap_socket(s, server_side=True) as ss:
+                print(f"Listening on {ip}:{port}")
+                ss.listen(5)
+                while True: # Main loop
+                    try:
+                        c,addr = ss.accept()
+                    except ssl.SSLError:
+                        print("Client connected without a proper TLS handshake!")
+                        continue
+                    print(f"Got connection from {addr}")
+                    # spawn connection
+                    p = multiprocessing.Process(target=handle_connection, args=(c,addr))
+                    p.daemon = True
+                    p.start()
+        else:
+            # HTTP connection
+            print(f"Listening on {ip}:{port}")
+            s.listen(5)
 
-    while True: # Main loop
-        c,addr = s.accept()
-        print(f"Got connection from {addr}")
-        # spawn connection
-        p = multiprocessing.Process(target=handle_connection, args=(c,addr))
-        p.daemon = True
-        p.start()
+            while True: # Main loop
+                c,addr = s.accept()
+                print(f"Got connection from {addr}")
+                # spawn connection
+                p = multiprocessing.Process(target=handle_connection, args=(c,addr))
+                p.daemon = True
+                p.start()
 
 def handle_connection(c,addr):
     data = c.recv(8192).decode("utf-8")
@@ -57,4 +78,34 @@ def process_req(data) -> HTTPResponse:
 
 
 if __name__ == "__main__":
-    init_listener()
+    argparser = argparse.ArgumentParser(description="A \"web server\"")
+    argparser.add_argument('--ip', '-i')
+    argparser.add_argument('--port', '-p')
+    argparser.add_argument('--secret-key','-s')
+    argparser.add_argument('--certificate','-c')
+    parsed = argparser.parse_args()
+    ENABLE_TLS=False
+    context = None
+
+    # Check if we need to enable TLS
+    if parsed.secret_key != None or parsed.certificate != None:
+        ENABLE_TLS = True
+        # Assert both key and cert are defined
+        if parsed.secret_key != None and parsed.certificate != None:
+            context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+            context.load_cert_chain(parsed.certificate, parsed.secret_key)
+        else:
+            print("Missing certificate or secret key")
+            exit(1)
+    if parsed.ip == None:
+        req_ip = '0.0.0.0'
+    else:
+        req_ip = parsed.ip
+
+    # TLS Initialization goes here
+    # This also determines the port if not specified
+    if parsed.port == None:
+        req_port = 443 if ENABLE_TLS else 80
+    else:
+        req_port = parsed.port
+    init_listener(req_ip, int(req_port), context)
