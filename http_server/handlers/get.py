@@ -14,6 +14,7 @@ def process_req(request,version,doc_root) -> HTTPResponse:
     # The request contains a string like "/a/resource/here" so we need to canonicalize it
     # with the document root for a valid FS location
     canonicalized_path = doc_root / request.path[1:] # Using [1:] to remove leading '/'
+    canonicalized_path = canonicalized_path.resolve()
 
     # First, check if the file is within the doc root, we do not want dir traversal
     if doc_root not in canonicalized_path.parents and doc_root != canonicalized_path:
