@@ -3,7 +3,7 @@ import os
 from http_server.response.response import HTTPResponse
 from http_server.response.codes import HTTPStatusCode
 
-def process_req(request,version) -> HTTPResponse:
+def process_req(request,version,doc_root) -> HTTPResponse:
     # Get the file that is being requested. Web server ROOT is determined by
     # launch parameters. See __main__.py for details
     print(request)
