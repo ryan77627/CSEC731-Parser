@@ -15,12 +15,16 @@ def process_req(request,version,doc_root) -> HTTPResponse:
 
     # If here, we are allowed to do whatever!
     # Eventually PHP scripts will be allowed to catch these, but for now
-    # we will just make a new file at the given path. Will fail if file exists
+    # we will just make a new resource at the specified location. We will
+    # compute the actual final URI that gets returned.
 
-    # Check if file exists
-    if canonicalized_path.exists():
-        # Bail, refusing to overwrite file
+    # Check if folder exists
+    if not canonicalized_path.is_dir():
+        # Bail, destination doesn't exist or is not a folder
         return HTTPResponse(HTTPStatusCode.CONFLICT,version=version,content="Refusing to overwrite existing resource.")
+
+    elif not canonicalized_path.exists():
+        return HTTPResponse(HTTPStatusCode.NOT_FOUND,version=version)
 
     # Check if Content-Length exists and is correct
     print(len(request.content))
