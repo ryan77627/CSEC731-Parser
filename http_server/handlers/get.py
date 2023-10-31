@@ -1,6 +1,6 @@
 # Handler for GET requests
 import mimetypes
-from http_server.__main__ import GLOBAL_OPTIONS
+from http_server import config
 from http_server.response.response import HTTPResponse
 from http_server.response.codes import HTTPStatusCode
 
@@ -21,8 +21,21 @@ def process_req(request,version,doc_root) -> HTTPResponse:
 
     # Next, check if path is a dir. If so, generate dir listing
     elif canonicalized_path.is_dir():
-        # Generate some html here...
-        return HTTPResponse(HTTPStatusCode.INTERNAL_ERROR,version=version,content="Not implemented yet!")
+        if config.GLOBAL_OPTIONS["TRY_FILES"]:
+            # Check for an index.html here. If exists, return it for /
+            p = canonicalized_path / "index.html"
+            if p.is_file():
+                # It exists, returning it
+                suppl_headers = {"Content-Type": mimetypes.guess_type(p)[0]}
+                return HTTPResponse(HTTPStatusCode.OK,version=version,content=p.open("rb").read(),suppl_headers=suppl_headers)
+        
+        # index.html non-existent. Check if we should make a dir listing
+        if config.GLOBAL_OPTIONS["GENERATE_DIR_LISTING"]:
+            return HTTPResponse(HTTPStatusCode.INTERNAL_ERROR,version=version,content="Not implemented yet!")
+
+        else:
+            # Bailing!
+            return HTTPResponse(HTTPStatusCode.NOT_FOUND,version=version,content="The requested resource was not found.")
 
     # In all other cases, try to access and return the file
     else:

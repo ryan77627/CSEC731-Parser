@@ -13,7 +13,7 @@ class HTTPResponse:
             self.__content = content.encode("utf-8")
         else:
             self.__content = content
-        self.__reply_headers = {"Date": datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT"), "content-length": len(content), "server":"RyanHTTP/0.5.0"}
+        self.__reply_headers = {"Date": datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT"), "content-length": len(content), "server":"RyanHTTP/0.5.0", "Connection":"Close"}
         self.__http_version = version
 
     @property
