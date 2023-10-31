@@ -9,6 +9,7 @@ class HTTPRequest:
         self.__headers = dict()
         self.__body = ""
         self.__req_path = ""
+        self.__req_vars = dict()
 
     @property
     def method(self):
@@ -18,8 +19,12 @@ class HTTPRequest:
     def version(self):
         return self.__req_version
 
+    @property
+    def path(self):
+        return self.__req_path
+
     def __str__(self):
-        return f"Method: {self.__method}, Requested HTTP version: {self.__req_version}, Path: {self.__req_path}, Headers: {self.__headers}, Body: \"{self.__body}\""
+        return f"Method: {self.__method}, Requested HTTP version: {self.__req_version}, Path: {self.__req_path}, Headers: {self.__headers}, Query Params: {self.__req_vars}, Body: \"{self.__body}\""
 
     def set_method(self, method):
         # Set the method
@@ -33,10 +38,20 @@ class HTTPRequest:
     def canonicalize_and_set_path(self, path_string):
         # This will be converted to an actual path later in execution
         # Here we just sanitize it
-        bad_chars = ["[","]","\\","=","<",">",":",";",",","\"","&","$","#","*","(",")","~","!","{","}","`"]
+        bad_chars = ["[","]","\\","<",">",":",";",",","\"","$","#","*","(",")","~","!","{","}","`"]
         sanitized_mid_list = [c for c in path_string if c not in bad_chars]
+        # Split out query params
+        p = "".join(sanitized_mid_list)
+        p = p.split("?")
         # Set the path
-        self.__req_path = "".join(sanitized_mid_list)
+        self.__req_path = p[0]
+        # Set the req query params
+        if len(p) >= 2: # We have at least one param
+            params = p[1].split("&")
+            print(params)
+            for i in params:
+                param = i.split("=")
+                self.__req_vars[param[0]] = param[1]
 
     def add_header(self, header):
         # Add a header to the request

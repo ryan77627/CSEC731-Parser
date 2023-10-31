@@ -2,12 +2,17 @@ import multiprocessing
 import argparse
 import socket
 import ssl
+import pathlib
 from http_server.parser import parser
 from http_server.handlers import get,post,put,delete,head
 from http_server.response.response import HTTPResponse
 from http_server.response.codes import HTTPStatusCode
 
-DOCUMENT_ROOT = ""
+GLOBAL_OPTIONS = {
+        "DOCUMENT_ROOT":"",
+        "TRY_FILES": True,
+        "GENERATE_DIR_LISTING": False
+        }
 
 def init_listener(ip, port, ctx=None):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -62,19 +67,19 @@ def process_req(data) -> HTTPResponse:
     # Now that we have a request, let's parse it and send it to a handler
     if req.method == "GET":
         # Send to GET handler
-        return get.process_req(req,resp_ver, DOCUMENT_ROOT)
+        return get.process_req(req,resp_ver, GLOBAL_OPTIONS["DOCUMENT_ROOT"])
     elif req.method == "POST":
         # Send to POST handler
-        return post.process_req(req,resp_ver, DOCUMENT_ROOT)
+        return post.process_req(req,resp_ver, GLOBAL_OPTIONS["DOCUMENT_ROOT"])
     elif req.method == "PUT":
         # Send to PUT handler
-        return put.process_req(req,resp_ver, DOCUMENT_ROOT)
+        return put.process_req(req,resp_ver, GLOBAL_OPTIONS["DOCUMENT_ROOT"])
     elif req.method == "DELETE":
         # Send to DELETE handler
-        return delete.process_req(req,resp_ver, DOCUMENT_ROOT)
+        return delete.process_req(req,resp_ver, GLOBAL_OPTIONS["DOCUMENT_ROOT"])
     elif req.method == "HEAD":
         # Send to HEAD handler
-        return head.process_req(req,resp_ver, DOCUMENT_ROOT)
+        return head.process_req(req,resp_ver, GLOBAL_OPTIONS["DOCUMENT_ROOT"])
     else:
         # Unimplemented method, return a 400 BAD REQUEST response
         return HTTPResponse(HTTPStatusCode.BAD_REQUEST, version=resp_ver)
@@ -89,8 +94,9 @@ if __name__ == "__main__":
     argparser.add_argument('--server-root', '-r')
     parsed = argparser.parse_args()
     ENABLE_TLS=False
-    DOCUMENT_ROOT = parsed.server_root
-    if not DOCUMENT_ROOT:
+    GLOBAL_OPTIONS["DOCUMENT_ROOT"] = pathlib.Path(parsed.server_root).absolute()
+    print(GLOBAL_OPTIONS["DOCUMENT_ROOT"])
+    if not GLOBAL_OPTIONS["DOCUMENT_ROOT"]:
         print("-r is required, Run -h for parameter details")
         exit(1)
     context = None

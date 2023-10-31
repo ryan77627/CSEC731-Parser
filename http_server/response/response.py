@@ -9,8 +9,11 @@ class HTTPResponse:
         # Only required parameter is the code, the rest can be inferred.
         self.__code = code
         self.__suppl_headers = suppl_headers
-        self.__content = content
-        self.__reply_headers = {"Date": datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT"), "content-length": len(content.encode("utf-8")), "server":"RyanHTTP/0.5.0"}
+        if type(content) == str:
+            self.__content = content.encode("utf-8")
+        else:
+            self.__content = content
+        self.__reply_headers = {"Date": datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT"), "content-length": len(content), "server":"RyanHTTP/0.5.0"}
         self.__http_version = version
 
     @property
@@ -20,22 +23,22 @@ class HTTPResponse:
 
     def generate_headers(self):
         # generate the string that has all the headers
-        hdrs = ""
+        hdrs = b""
         for k in self.__reply_headers.keys():
-            hdrs += f"{k}: {self.__reply_headers[k]}\r\n"
+            hdrs += f"{k}: {self.__reply_headers[k]}\r\n".encode("utf-8")
 
         for k in self.__suppl_headers.keys():
-            hdrs += f"{k}: {self.__suppl_headers[k]}\r\n"
+            hdrs += f"{k}: {self.__suppl_headers[k]}\r\n".encode("utf-8")
 
-        hdrs += "\r\n" # Extra line break to denote end of headers
+        hdrs += b"\r\n" # Extra line break to denote end of headers
         return hdrs
 
     def __repr__(self):
         # Returns a string representation for use as a response
-        resp = "" # Convert to bytes at end so we can use f-strings
+        resp = b"" # Convert to bytes at end so we can use f-strings
         
         # First, respond with the status
-        resp += f"HTTP/{self.__http_version} {self.__code}\r\n"
+        resp += f"HTTP/{self.__http_version} {self.__code}\r\n".encode("utf-8")
 
         # Next, apply required and supplemental headers
         resp += self.generate_headers()
@@ -49,4 +52,4 @@ class HTTPResponse:
         # Like __repr__ but returns bytes
         resp = self.__repr__()
 
-        return resp.encode("utf-8")
+        return resp
