@@ -24,4 +24,5 @@ class HTTPStatusCode(IntEnum):
 
     # Server Errors
     INTERNAL_ERROR = (500, "Internal Server Error", "The server cannot complete your request as given, try again :(")
+    NOT_IMPLEMENTED = (501, "Not Implemented", "The server cannot complete your request because the requested method is not implemented.")
     HTTP_VERSION_INVALID = (505, "HTTP Version Not Supported", "Client gave a HTTP version that this server does not support!")

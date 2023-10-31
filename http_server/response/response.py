@@ -2,18 +2,22 @@
 from datetime import datetime, timezone
 
 class HTTPResponse:
-    def __init__(self, code, suppl_headers = {}, content="", version=0.9):
+    def __init__(self, code, suppl_headers = {}, content=None, version=0.9):
         # code is an HTTPStatusCode, suppl_headers is _currently_ a dict of
         # supplementary reply headers, and content is any body content.
         #
         # Only required parameter is the code, the rest can be inferred.
         self.__code = code
         self.__suppl_headers = suppl_headers
-        if type(content) == str:
+        if content == None:
+            # Use default from HTTPStatusCode
+            self.__content = code.desc + "\n"
+            self.__content = self.__content.encode("utf-8")
+        elif type(content) == str:
             self.__content = content.encode("utf-8")
         else:
             self.__content = content
-        self.__reply_headers = {"Date": datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT"), "content-length": len(content), "server":"RyanHTTP/0.5.0", "Connection":"Close"}
+        self.__reply_headers = {"Date": datetime.now(timezone.utc).strftime("%a, %d %b %Y %H:%M:%S GMT"), "content-length": len(self.__content), "server":"RyanHTTP/0.5.0", "Connection":"Close"}
         self.__http_version = version
 
     @property

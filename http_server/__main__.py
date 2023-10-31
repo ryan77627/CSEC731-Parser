@@ -89,12 +89,13 @@ if __name__ == "__main__":
     argparser.add_argument('--server-root', '-r')
     argparser.add_argument('--try-files', '-t', help='If set, index.html will be tried if navigating to a directory before returning either its listing or a 404.', action='store_true')
     argparser.add_argument('--allow-listings', '-d', help='If set, this will enable directory listings when navigating to a directory.', action='store_true')
+    argparser.add_argument('--enable-mutation', help='If set, HTTP Requests that mutate server state (anything other than GET) will be permitted.', action='store_true')
     parsed = argparser.parse_args()
     ENABLE_TLS=False
     config.GLOBAL_OPTIONS["GENERATE_DIR_LISTING"] = parsed.allow_listings
     config.GLOBAL_OPTIONS["TRY_FILES"] = parsed.try_files
     config.GLOBAL_OPTIONS["DOCUMENT_ROOT"] = pathlib.Path(parsed.server_root).absolute()
-    print(config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
+    config.GLOBAL_OPTIONS["ALLOW_SERVER_MUTATION"] = parsed.enable_mutation
     if not config.GLOBAL_OPTIONS["DOCUMENT_ROOT"]:
         print("-r is required, Run -h for parameter details")
         exit(1)
