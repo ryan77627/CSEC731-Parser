@@ -21,6 +21,8 @@ class HTTPStatusCode(IntEnum):
     UNAUTHORIZED = (401, "Unauthorized", "No permissions to access")
     FORBIDDEN = (403, "Forbidden", "Server forbidden to access")
     NOT_FOUND = (404, "Not Found", "Server could not find the file requested")
+    CONFLICT = (409, "Conflict", "There was a conflict")
+    LENGTH_REQ = (411, "Length Required", "You need to specify/correct your Content-Length header.")
 
     # Server Errors
     INTERNAL_ERROR = (500, "Internal Server Error", "The server cannot complete your request as given, try again :(")

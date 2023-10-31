@@ -7,7 +7,7 @@ class HTTPRequest:
         self.__method = ""
         self.__req_version = 0.9
         self.__headers = dict()
-        self.__body = ""
+        self.__body = b""
         self.__req_path = ""
         self.__req_vars = dict()
 
@@ -23,8 +23,16 @@ class HTTPRequest:
     def path(self):
         return self.__req_path
 
+    @property
+    def headers(self):
+        return self.__headers
+
+    @property
+    def content(self):
+        return self.__body
+
     def __str__(self):
-        return f"Method: {self.__method}, Requested HTTP version: {self.__req_version}, Path: {self.__req_path}, Headers: {self.__headers}, Query Params: {self.__req_vars}, Body: \"{self.__body}\""
+        return f"Method: {self.__method}, Requested HTTP version: {self.__req_version}, Path: {self.__req_path}, Headers: {self.__headers}, Query Params: {self.__req_vars}, Body: \"{self.__body.decode('utf-8')}\""
 
     def set_method(self, method):
         # Set the method
@@ -67,6 +75,7 @@ class HTTPRequest:
     def set_body_data(self, body_data):
         # This will be a list, so we need to concatenate it back to proper form
         self.__body = "\n".join(body_data) if body_data != [''] else ""
+        self.__body = self.__body.encode("utf-8")
 
 
 def parse_http_data(data):
