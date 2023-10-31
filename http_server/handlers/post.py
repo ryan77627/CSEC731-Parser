@@ -10,7 +10,7 @@ def process_req(request,version,doc_root) -> HTTPResponse:
     if doc_root not in canonicalized_path.parents and doc_root != canonicalized_path:
         return HTTPResponse(HTTPStatusCode.FORBIDDEN,version=version,content="Server is forbidden from accessing this resource!")
 
-    if not config.GLOBAL_OPTIONS["ALLOW_SERVER_MUTATION"]:
+    if config.GLOBAL_OPTIONS["DISABLE_SERVER_MUTATION"]:
         return HTTPResponse(HTTPStatusCode.NOT_IMPLEMENTED,version=version)
 
     # If here, we are allowed to do whatever!
