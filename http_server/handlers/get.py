@@ -3,6 +3,7 @@ import mimetypes
 from http_server import config
 from http_server.response.response import HTTPResponse
 from http_server.response.codes import HTTPStatusCode
+from http_server.htmlbuilder.dir_listing import gen_listing
 
 def process_req(request,version,doc_root) -> HTTPResponse:
     # Get the file that is being requested. Web server doc_root is determined by
@@ -31,7 +32,8 @@ def process_req(request,version,doc_root) -> HTTPResponse:
         
         # index.html non-existent. Check if we should make a dir listing
         if config.GLOBAL_OPTIONS["GENERATE_DIR_LISTING"]:
-            return HTTPResponse(HTTPStatusCode.INTERNAL_ERROR,version=version,content="Not implemented yet!")
+            resp = gen_listing(canonicalized_path)
+            return HTTPResponse(HTTPStatusCode.OK,version=version,content=resp)
 
         else:
             # Bailing!
