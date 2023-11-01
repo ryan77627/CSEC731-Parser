@@ -1,6 +1,8 @@
 from http_server.response.response import HTTPResponse
 from http_server.response.codes import HTTPStatusCode
 from http_server import config
+import time
+import base64
 # Handler for POST requests
 
 def process_req(request,version,doc_root) -> HTTPResponse:
@@ -34,13 +36,31 @@ def process_req(request,version,doc_root) -> HTTPResponse:
     elif int(request.headers["Content-Length"][0]) != len(request.content):
         return HTTPResponse(HTTPStatusCode.LENGTH_REQ,version=version)
 
+    # We are ready to create a new file. Replace the path with the final path
+    # and do it!
+    canonicalized_path, path_string = generate_path(canonicalized_path)
+
     try:
         with open(canonicalized_path, "wb") as f:
             # Write the contents
             f.write(request.content)
         # If here, write was successful, return the resource
-        suppl_headers = {"Location": request.path}
+        suppl_headers = {"Location": f"{request.path}/{path_string}"}
         return HTTPResponse(HTTPStatusCode.CREATED,version=version,suppl_headers=suppl_headers)
 
     except:
         return HTTPResponse(HTTPStatusCode.INTERNAL_ERROR,version=version,content="An internal error occured, checkk server logs.")
+
+def generate_path(canonicalized_path):
+    """
+    Generate a path that the resource will be placed at.
+    Needs to be unique
+    """
+
+    while True:
+        # In loop just in case we generate something that exists already
+        unique_value = base64.b64encode(str(time.time()).encode())[-7:].decode().strip("=") 
+        potential_path = canonicalized_path / unique_value
+        if not potential_path.exists():
+            # We have a good path, returning...
+            return potential_path, unique_value

@@ -1,6 +1,6 @@
 ## TODO:
 
-- [ ] Implement ALL methods
+- [x] Implement ALL methods
 - [ ] Implement PHP execution
 - [ ] Implement test suite from grading ruberic
 - [ ] Implement logger class
