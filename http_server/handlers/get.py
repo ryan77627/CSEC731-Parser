@@ -5,6 +5,7 @@ from http_server.response.response import HTTPResponse
 from http_server.response.codes import HTTPStatusCode
 from http_server.htmlbuilder.dir_listing import gen_listing
 import subprocess
+import os
 from http_server.parser.parser import parse_php_response as parse_php_response
 
 def process_req(request,version,doc_root) -> HTTPResponse:
@@ -51,12 +52,16 @@ def process_req(request,version,doc_root) -> HTTPResponse:
             # We have a php file!
             # Set up the environment and execute!
             environ = dict()
-            environ["SCRIPT_NAME"] = canonicalized_path.name
+            environ["SCRIPT_FILENAME"] = str(canonicalized_path)
+            print(str(canonicalized_path))
             environ["REQUEST_METHOD"] = "GET"
-            environ["REDIRECT_STATUS"] = 0
+            environ["REDIRECT_STATUS"] = "0"
+            environ["PATH"] = os.environ["PATH"]
             environ["QUERY_STRING"] = request.query_string
-            out = subprocess.run(["php-cgi", str(canonicalized_path)], capture_output=True)
+            out = subprocess.run(["php-cgi", str(canonicalized_path)], capture_output=True, env=environ)
             if out.returncode != 0:
+                print(out.stderr)
+                print(out.stdout)
                 return HTTPResponse(HTTPStatusCode.INTERNAL_ERROR, version=version, content="PHP Script has encountered an exception!\n")
             else:
                 # Parse the PHP output

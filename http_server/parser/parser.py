@@ -37,7 +37,7 @@ class HTTPRequest:
         c = 0
         for k in self.__req_vars.keys():
             if c == 0:
-                final_string += f"?{k}={self.__req_vars[k]}"
+                final_string += f"{k}={self.__req_vars[k]}"
                 c += 1
             else:
                 final_string += f"&{k}={self.__req_vars[k]}"
