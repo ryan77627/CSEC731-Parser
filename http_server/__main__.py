@@ -60,24 +60,30 @@ def process_req(data) -> HTTPResponse:
     resp_ver = req.version
 
     # Now that we have a request, let's parse it and send it to a handler
-    if req.method == "GET":
-        # Send to GET handler
-        return get.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
-    elif req.method == "POST":
-        # Send to POST handler
-        return post.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
-    elif req.method == "PUT":
-        # Send to PUT handler
-        return put.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
-    elif req.method == "DELETE":
-        # Send to DELETE handler
-        return delete.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
-    elif req.method == "HEAD":
-        # Send to HEAD handler
-        return head.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
-    else:
-        # Unimplemented method, return a 400 BAD REQUEST response
-        return HTTPResponse(HTTPStatusCode.BAD_REQUEST, version=resp_ver)
+    try:
+        if req.method == "GET":
+            # Send to GET handler
+            return get.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
+        elif req.method == "POST":
+            # Send to POST handler
+            return post.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
+        elif req.method == "PUT":
+            # Send to PUT handler
+            return put.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
+        elif req.method == "DELETE":
+            # Send to DELETE handler
+            return delete.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
+        elif req.method == "HEAD":
+            # Send to HEAD handler
+            return head.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
+        else:
+            # Unimplemented method, return a 400 BAD REQUEST response
+            return HTTPResponse(HTTPStatusCode.BAD_REQUEST, version=resp_ver)
+    except Exception as e:
+        # We had some sort of error, let's gracefully handle it for the client
+        print("Thread threw an exception: ")
+        print(e)
+        return HTTPResponse(HTTPStatusCode.INTERNAL_ERROR, version=resp_ver)
 
 
 if __name__ == "__main__":

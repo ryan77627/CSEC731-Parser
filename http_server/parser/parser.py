@@ -31,6 +31,20 @@ class HTTPRequest:
     def content(self):
         return self.__body
 
+    @property
+    def query_string(self):
+        final_string = ""
+        c = 0
+        for k in self.__req_vars.keys():
+            if c == 0:
+                final_string += f"?{k}={self.__req_vars[k]}"
+                c += 1
+            else:
+                final_string += f"&{k}={self.__req_vars[k]}"
+                c += 1
+
+        return final_string
+
     def __str__(self):
         return f"Method: {self.__method}, Requested HTTP version: {self.__req_version}, Path: {self.__req_path}, Headers: {self.__headers}, Query Params: {self.__req_vars}, Body: \"{self.__body.decode('utf-8')}\""
 
@@ -100,6 +114,27 @@ def parse_http_data(data):
             headers.append(data[i+1])
             data_counter += 1
 
+    parse_headers(headers, request)
+    request.set_body_data(data[data_counter+1:])
+
+    return request
+
+def parse_php_response(data):
+    # PHP-CGI responds in stdout with a partial HTTP response, containing
+    # headers and the body, so we can make a sorta "pseudo-request" that parses
+    # the raw html so we can sorta cast the values into a response
+    request = HTTPRequest()
+    headers = []
+    data_counter = 1
+    for i in range(len(data[1:])):
+        print(data[i+1])
+        if data[i+1] == "":
+            break
+        else:
+            headers.append(data[i+1])
+            data_counter += 1
+
+    print(headers)
     parse_headers(headers, request)
     request.set_body_data(data[data_counter+1:])
 
