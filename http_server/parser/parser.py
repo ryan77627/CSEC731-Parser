@@ -1,6 +1,7 @@
 # Main entrypoint for parser
 from http_server.parser.headers import parse_first_header as parse_first_header
 from http_server.parser.headers import parse_headers as parse_headers
+from http_server import config
 
 class HTTPRequest:
     def __init__(self):
@@ -70,7 +71,7 @@ class HTTPRequest:
         # Set the req query params
         if len(p) >= 2: # We have at least one param
             params = p[1].split("&")
-            print(params)
+            logger.log("DEBUG", f"Request URL Parameters: {params}")
             for i in params:
                 param = i.split("=")
                 self.__req_vars[param[0]] = param[1]
@@ -79,7 +80,7 @@ class HTTPRequest:
         # Add a header to the request
         # If the header already exists, append the new one
         # Expects ["key", "some values, are, here"]
-        print(header)
+        logger.log("DEBUG", f"Request Header added: {header}")
         if header[0] not in self.__headers.keys():
             self.__headers[header[0]] = header[1].strip().split(",")
         else:
@@ -96,6 +97,9 @@ def parse_http_data(data):
     # Given a list where each item is a line from the request,
     # parse the request, perform the actions, and
     # construct the response
+
+    global logger
+    logger = config.GLOBAL_VARS['logger']
 
     request = HTTPRequest()
 
@@ -127,14 +131,12 @@ def parse_php_response(data):
     headers = []
     data_counter = 1
     for i in range(len(data)):
-        print(data[i])
         if data[i] == "":
             break
         else:
             headers.append(data[i])
             data_counter += 1
 
-    print(headers)
     parse_headers(headers, request)
     request.set_body_data(data[data_counter+1:])
 

@@ -8,6 +8,8 @@ from http_server.parser import parser
 from http_server.handlers import get,post,put,delete,head
 from http_server.response.response import HTTPResponse
 from http_server.response.codes import HTTPStatusCode
+from http_server.logger import logger as logger_funcs
+from http_server.logger.logger import Logger
 
 def init_listener(ip, port, ctx=None):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -15,29 +17,29 @@ def init_listener(ip, port, ctx=None):
         s.bind((ip, port))
         if ctx != None:
             # Enabling TLS
-            print("Enabling TLS!")
+            logger.log("DEBUG", "Initializing TLS!")
             with ctx.wrap_socket(s, server_side=True) as ss:
-                print(f"Listening on {ip}:{port}")
+                logger.log("INFO", f"Listening on {ip}:{port}")
                 ss.listen(5)
                 while True: # Main loop
                     try:
                         c,addr = ss.accept()
                     except ssl.SSLError:
-                        print("Client connected without a proper TLS handshake!")
+                        logger.log("ERROR", "Client connected without a proper TLS handshake!")
                         continue
-                    print(f"Got connection from {addr}")
+                    logger.log("DEBUG", f"Got connection from {addr}")
                     # spawn connection
                     p = multiprocessing.Process(target=handle_connection, args=(c,addr))
                     p.daemon = True
                     p.start()
         else:
             # HTTP connection
-            print(f"Listening on {ip}:{port}")
+            logger.log("INFO", f"Listening on {ip}:{port}")
             s.listen(5)
 
             while True: # Main loop
                 c,addr = s.accept()
-                print(f"Got connection from {addr}")
+                logger.log("DEBUG", f"Got connection from {addr}")
                 # spawn connection
                 p = multiprocessing.Process(target=handle_connection, args=(c,addr))
                 p.daemon = True
@@ -55,7 +57,9 @@ def process_req(data) -> HTTPResponse:
     req_list = data.replace('\r','')
     req_list = req_list.split('\n')
 
+    logger.log("DEBUG", "Beginning processing of request")
     req = parser.parse_http_data(req_list)
+    logger.log("DEBUG", "Request successfully processed")
 
     resp_ver = req.version
 
@@ -78,11 +82,11 @@ def process_req(data) -> HTTPResponse:
             return head.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
         else:
             # Unimplemented method, return a 400 BAD REQUEST response
+            logger.log("WARNING", f"Request of method {req.method} received, not implemented. Sending error to client.")
             return HTTPResponse(HTTPStatusCode.BAD_REQUEST, version=resp_ver)
     except Exception as e:
         # We had some sort of error, let's gracefully handle it for the client
-        print("Thread threw an exception: ")
-        print(e)
+        logger.log("WARNING", f"Thread threw an exception: {e}")
         return HTTPResponse(HTTPStatusCode.INTERNAL_ERROR, version=resp_ver)
 
 
@@ -93,12 +97,15 @@ if __name__ == "__main__":
     argparser.add_argument('--secret-key','-s')
     argparser.add_argument('--certificate','-c')
     argparser.add_argument('--server-root', '-r')
+    argparser.add_argument('--log-level', '-l', help=f'Set logging level. Valid levels are {logger_funcs.get_valid_levels()}. Default is INFO', default="INFO")
     argparser.add_argument('--try-files', '-t', help='If set, index.html will be tried if navigating to a directory before returning either its listing or a 404.', action='store_true')
     argparser.add_argument('--allow-listings', '-d', help='If set, this will enable directory listings when navigating to a directory.', action='store_true')
     argparser.add_argument('--disable-mutation', help='If set, HTTP Requests that mutate server state (anything other than GET) will be denied.', action='store_true')
     argparser.add_argument('--disable-php', help='If set, PHP execution via php-cgi will be disabled and any php files will be returned as text files.', action='store_true')
     parsed = argparser.parse_args()
     ENABLE_TLS=False
+    logger = Logger(parsed.log_level)
+    config.GLOBAL_VARS['logger'] = logger
     config.GLOBAL_OPTIONS["GENERATE_DIR_LISTING"] = parsed.allow_listings
     config.GLOBAL_OPTIONS["TRY_FILES"] = parsed.try_files
     config.GLOBAL_OPTIONS["DOCUMENT_ROOT"] = pathlib.Path(parsed.server_root).absolute()

@@ -5,3 +5,5 @@ GLOBAL_OPTIONS = {
         "DISABLE_SERVER_MUTATION": False,
         "DISABLE_PHP_EXECUTION": False
         }
+
+GLOBAL_VARS = dict()
