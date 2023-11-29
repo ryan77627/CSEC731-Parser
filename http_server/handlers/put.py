@@ -1,6 +1,7 @@
 from http_server.response.response import HTTPResponse
 from http_server.response.codes import HTTPStatusCode
 from http_server import config
+from http_server.handlers.php_runner import php_postput_request
 # Handler for PUT requests
 
 def process_req(request,version,doc_root) -> HTTPResponse:
@@ -16,6 +17,13 @@ def process_req(request,version,doc_root) -> HTTPResponse:
     # If here, we are allowed to do whatever!
     # Eventually PHP scripts will be allowed to catch these, but for now
     # we will just make a new file at the given path. Will fail if file exists
+
+    if canonicalized_path.suffix.strip(".") == "php":
+        # Run PHP handler
+        resp_status, raw_php_resp = php_postput_request(canonicalized_path, request)
+        resp = HTTPResponse(resp_status, version=version, content=raw_php_resp.content)
+        resp.add_php_headers(raw_php_resp.headers)
+        return resp
 
     # Check if Content-Length exists and is correct
     print(len(request.content))
