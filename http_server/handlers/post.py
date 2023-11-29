@@ -3,6 +3,7 @@ from http_server.response.codes import HTTPStatusCode
 from http_server import config
 import time
 import base64
+from http_server.handlers.php_runner import php_postput_request
 # Handler for POST requests
 
 def process_req(request,version,doc_root) -> HTTPResponse:
@@ -19,6 +20,14 @@ def process_req(request,version,doc_root) -> HTTPResponse:
     # Eventually PHP scripts will be allowed to catch these, but for now
     # we will just make a new resource at the specified location. We will
     # compute the actual final URI that gets returned.
+    
+    # Check if the request is going to a php file
+    if canonicalized_path.suffix.strip(".") == "php":
+        # Run PHP handler
+        resp_status, raw_php_resp = php_postput_request(canonicalized_path, request)
+        resp = HTTPResponse(resp_status, version=version, content=raw_php_resp.content)
+        resp.add_php_headers(raw_php_resp.headers)
+        return resp
 
     # Check if folder exists
     if not canonicalized_path.is_dir():

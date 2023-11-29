@@ -4,9 +4,7 @@ from http_server import config
 from http_server.response.response import HTTPResponse
 from http_server.response.codes import HTTPStatusCode
 from http_server.htmlbuilder.dir_listing import gen_listing
-import subprocess
-import os
-from http_server.parser.parser import parse_php_response as parse_php_response
+from http_server.handlers.php_runner import php_get_request
 
 def process_req(request,version,doc_root) -> HTTPResponse:
     # Get the file that is being requested. Web server doc_root is determined by
@@ -51,24 +49,11 @@ def process_req(request,version,doc_root) -> HTTPResponse:
         if canonicalized_path.suffix.strip(".") == "php":
             # We have a php file!
             # Set up the environment and execute!
-            environ = dict()
-            environ["SCRIPT_FILENAME"] = str(canonicalized_path)
-            print(str(canonicalized_path))
-            environ["REQUEST_METHOD"] = "GET"
-            environ["REDIRECT_STATUS"] = "0"
-            environ["PATH"] = os.environ["PATH"]
-            environ["QUERY_STRING"] = request.query_string
-            out = subprocess.run(["php-cgi", str(canonicalized_path)], capture_output=True, env=environ)
-            if out.returncode != 0:
-                print(out.stderr)
-                print(out.stdout)
-                return HTTPResponse(HTTPStatusCode.INTERNAL_ERROR, version=version, content="PHP Script has encountered an exception!\n")
-            else:
-                # Parse the PHP output
-                php_resp_raw = parse_php_response(out.stdout.decode().replace('\r','').split('\n'))
-                resp = HTTPResponse(HTTPStatusCode.OK, version=version, content=php_resp_raw.content)
-                resp.add_php_headers(php_resp_raw.headers)
-                return resp
+            resp_status, raw_php_resp = php_get_request(canonicalized_path, request)
+            resp = HTTPResponse(resp_status, version=version, content=raw_php_resp.content)
+            resp.add_php_headers(raw_php_resp.headers)
+            return resp
+
         try:
             with open(canonicalized_path, "rb") as f:
                 return HTTPResponse(HTTPStatusCode.OK,version=version,content=f.read())

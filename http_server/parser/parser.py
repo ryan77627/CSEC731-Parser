@@ -126,12 +126,12 @@ def parse_php_response(data):
     request = HTTPRequest()
     headers = []
     data_counter = 1
-    for i in range(len(data[1:])):
-        print(data[i+1])
-        if data[i+1] == "":
+    for i in range(len(data)):
+        print(data[i])
+        if data[i] == "":
             break
         else:
-            headers.append(data[i+1])
+            headers.append(data[i])
             data_counter += 1
 
     print(headers)
