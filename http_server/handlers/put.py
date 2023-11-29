@@ -18,7 +18,7 @@ def process_req(request,version,doc_root) -> HTTPResponse:
     # Eventually PHP scripts will be allowed to catch these, but for now
     # we will just make a new file at the given path. Will fail if file exists
 
-    if canonicalized_path.suffix.strip(".") == "php":
+    if canonicalized_path.suffix.strip(".") == "php" and not config.GLOBAL_OPTIONS["DISABLE_PHP_EXECUTION"]:
         # Run PHP handler
         resp_status, raw_php_resp = php_postput_request(canonicalized_path, request)
         resp = HTTPResponse(resp_status, version=version, content=raw_php_resp.content)

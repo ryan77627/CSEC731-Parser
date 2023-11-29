@@ -22,7 +22,7 @@ def process_req(request,version,doc_root) -> HTTPResponse:
     # compute the actual final URI that gets returned.
     
     # Check if the request is going to a php file
-    if canonicalized_path.suffix.strip(".") == "php":
+    if canonicalized_path.suffix.strip(".") == "php" and not config.GLOBAL_OPTIONS["DISABLE_PHP_EXECUTION"]:
         # Run PHP handler
         resp_status, raw_php_resp = php_postput_request(canonicalized_path, request)
         resp = HTTPResponse(resp_status, version=version, content=raw_php_resp.content)

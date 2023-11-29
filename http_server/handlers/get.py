@@ -46,7 +46,7 @@ def process_req(request,version,doc_root) -> HTTPResponse:
         guessed_type = mimetypes.guess_type(canonicalized_path)[0]
         suppl_headers = {"Content-Type": "text/plain" if not guessed_type else guessed_type}
         # Handle the case that we need to execute PHP
-        if canonicalized_path.suffix.strip(".") == "php":
+        if canonicalized_path.suffix.strip(".") == "php" and not config.GLOBAL_OPTIONS["DISABLE_PHP_EXECUTION"]:
             # We have a php file!
             # Set up the environment and execute!
             resp_status, raw_php_resp = php_get_request(canonicalized_path, request)
