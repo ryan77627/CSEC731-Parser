@@ -7,13 +7,19 @@ from http_server.handlers.php_runner import php_postput_request
 # Handler for POST requests
 
 def process_req(request,version,doc_root) -> HTTPResponse:
+    global logger
+    logger = config.GLOBAL_VARS['logger']
     canonicalized_path = doc_root / request.path[1:]
     canonicalized_path = canonicalized_path.resolve()
+    logger.log("DEBUG", "POST handler invoked")
+    logger.log("DEBUG", f"Canonicalized path is resolved to {canonicalized_path}")
 
     if doc_root not in canonicalized_path.parents and doc_root != canonicalized_path:
+        logger.log("DEBUG", "Directory Traversal Blocked")
         return HTTPResponse(HTTPStatusCode.FORBIDDEN,version=version,content="Server is forbidden from accessing this resource!")
 
     if config.GLOBAL_OPTIONS["DISABLE_SERVER_MUTATION"]:
+        logger.log("DEBUG", "File mutation disabled, bailing on request!")
         return HTTPResponse(HTTPStatusCode.NOT_IMPLEMENTED,version=version)
 
     # If here, we are allowed to do whatever!
@@ -71,5 +77,6 @@ def generate_path(canonicalized_path):
         unique_value = base64.b64encode(str(time.time()).encode())[-7:].decode().strip("=") 
         potential_path = canonicalized_path / unique_value
         if not potential_path.exists():
+            logger.log("DEBUG", f"Generated path of {potential_path}")
             # We have a good path, returning...
             return potential_path, unique_value

@@ -34,19 +34,16 @@ def process_req(request,version,doc_root) -> HTTPResponse:
                 logger.log("DEBUG", "Returning index.html found in directory")
                 # It exists, returning it
                 suppl_headers = {"Content-Type": mimetypes.guess_type(p)[0]}
-                logger.log("INFO", f"{request.method} {request.path}/index.html 200")
                 return HTTPResponse(HTTPStatusCode.OK,version=version,content=p.open("rb").read(),suppl_headers=suppl_headers)
         
         # index.html non-existent. Check if we should make a dir listing
         if config.GLOBAL_OPTIONS["GENERATE_DIR_LISTING"]:
             logger.log("DEBUG", f"Generating directory listing for {canonicalized_path}.")
             resp = gen_listing(canonicalized_path)
-            logger.log("INFO", f"{request.method} {request.path} 200")
             return HTTPResponse(HTTPStatusCode.OK,version=version,content=resp)
 
         else:
             # Bailing!
-            logger.log("WARNING", f"{request.method} {request.path} 404")
             return HTTPResponse(HTTPStatusCode.NOT_FOUND,version=version,content="The requested resource was not found.")
 
     # In all other cases, try to access and return the file
@@ -55,24 +52,17 @@ def process_req(request,version,doc_root) -> HTTPResponse:
         suppl_headers = {"Content-Type": "text/plain" if not guessed_type else guessed_type}
         # Handle the case that we need to execute PHP
         if canonicalized_path.suffix.strip(".") == "php" and not config.GLOBAL_OPTIONS["DISABLE_PHP_EXECUTION"]:
-            logger.log("DEBUG", "PHP file requested and not disabled, invoking php-cgi")
             # We have a php file!
             # Set up the environment and execute!
             resp_status, raw_php_resp = php_get_request(canonicalized_path, request)
             resp = HTTPResponse(resp_status, version=version, content=raw_php_resp.content)
             resp.add_php_headers(raw_php_resp.headers)
-            if resp_status != HTTPStatusCode.OK:
-                logger.log("WARNING", f"{request.method} {request.path} {resp_status}")
-            else:
-                logger.log("INFO", f"{request.method} {request.path} {resp_status}")
             return resp
 
         try:
             with open(canonicalized_path, "rb") as f:
-                logger.log("INFO", f"{request.method} {request.path} 200")
                 return HTTPResponse(HTTPStatusCode.OK,version=version,content=f.read())
         except FileNotFoundError:
             # Resource wasn't found
-            logger.log("WARNING", f"{request.method} {request.path} 404")
             return HTTPResponse(HTTPStatusCode.NOT_FOUND, version=version)
 

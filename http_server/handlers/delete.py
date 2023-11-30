@@ -27,7 +27,6 @@ def process_req(request,version,doc_root) -> HTTPResponse:
         try:
             canonicalized_path.rmtree()
             logger.log("DEBUG", f"Deleted dir {canonicalized_path}")
-            logger.log("INFO", f"{request.method} {request.path} 200")
             return HTTPResponse(HTTPStatusCode.OK,version=version,content="Deleted")
         except Exception as e:
             logger.log("ERROR", f"Delete dir failed: {e}")
@@ -36,7 +35,6 @@ def process_req(request,version,doc_root) -> HTTPResponse:
         try:
             canonicalized_path.unlink()
             logger.log("DEBUG", f"Deleted file {canonicalized_path}")
-            logger.log("INFO", f"{request.method} {request.path} 200")
             return HTTPResponse(HTTPStatusCode.OK,version=version,content="Deleted")
         except Exception as e:
             logger.log("ERROR", f"Delete file failed: {e}")

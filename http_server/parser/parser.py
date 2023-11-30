@@ -2,6 +2,7 @@
 from http_server.parser.headers import parse_first_header as parse_first_header
 from http_server.parser.headers import parse_headers as parse_headers
 from http_server import config
+from urllib.parse import unquote
 
 class HTTPRequest:
     def __init__(self):
@@ -65,6 +66,7 @@ class HTTPRequest:
         sanitized_mid_list = [c for c in path_string if c not in bad_chars]
         # Split out query params
         p = "".join(sanitized_mid_list)
+        p = unquote(p)
         p = p.split("?")
         # Set the path
         self.__req_path = p[0]
@@ -80,12 +82,12 @@ class HTTPRequest:
         # Add a header to the request
         # If the header already exists, append the new one
         # Expects ["key", "some values, are, here"]
-        logger.log("DEBUG", f"Request Header added: {header}")
         if header[0] not in self.__headers.keys():
             self.__headers[header[0]] = header[1].strip().split(",")
         else:
             for item in header[1].split(","):
                 self.__headers[header[0]].append(item)
+        logger.log("DEBUG", f"Request Header added: {header[0]} - {self.__headers[header[0]]}")
 
     def set_body_data(self, body_data):
         # This will be a list, so we need to concatenate it back to proper form

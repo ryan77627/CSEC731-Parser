@@ -47,10 +47,17 @@ def init_listener(ip, port, ctx=None):
 
 def handle_connection(c,addr):
     data = c.recv(8192).decode("utf-8")
-    resp = process_req(data).generate_bytes()
-    c.send(resp)
+    req, resp = process_req(data)
+    # Log before sending
+    if resp.code == HTTPStatusCode.OK:
+        logger.log("INFO", f"{req.method} {req.path} {resp.code}")
+    elif resp.code == HTTPStatusCode.INTERNAL_ERROR:
+        logger.log("ERROR", f"{req.method} {req.path} {resp.code}")
+    else:
+        logger.log("WARNING", f"{req.method} {req.path} {resp.code}")
+    c.send(resp.generate_bytes())
 
-def process_req(data) -> HTTPResponse:
+def process_req(data):
     # Entrypoint for the HTTP Parser
     # Get the data
     # Parse!
@@ -58,7 +65,11 @@ def process_req(data) -> HTTPResponse:
     req_list = req_list.split('\n')
 
     logger.log("DEBUG", "Beginning processing of request")
-    req = parser.parse_http_data(req_list)
+    try:
+        req = parser.parse_http_data(req_list)
+    except Exception as e:
+        logger.log("ERROR", f"HTTP Parsing failure! {e}")
+        quit(1)
     logger.log("DEBUG", "Request successfully processed")
 
     resp_ver = req.version
@@ -67,19 +78,19 @@ def process_req(data) -> HTTPResponse:
     try:
         if req.method == "GET":
             # Send to GET handler
-            return get.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
+            return req, get.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
         elif req.method == "POST":
             # Send to POST handler
-            return post.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
+            return req, post.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
         elif req.method == "PUT":
             # Send to PUT handler
-            return put.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
+            return req, put.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
         elif req.method == "DELETE":
             # Send to DELETE handler
-            return delete.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
+            return req, delete.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
         elif req.method == "HEAD":
             # Send to HEAD handler
-            return head.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
+            return req, head.process_req(req,resp_ver, config.GLOBAL_OPTIONS["DOCUMENT_ROOT"])
         else:
             # Unimplemented method, return a 400 BAD REQUEST response
             logger.log("WARNING", f"Request of method {req.method} received, not implemented. Sending error to client.")
@@ -87,7 +98,7 @@ def process_req(data) -> HTTPResponse:
     except Exception as e:
         # We had some sort of error, let's gracefully handle it for the client
         logger.log("WARNING", f"Thread threw an exception: {e}")
-        return HTTPResponse(HTTPStatusCode.INTERNAL_ERROR, version=resp_ver)
+        return req, HTTPResponse(HTTPStatusCode.INTERNAL_ERROR, version=resp_ver)
 
 
 if __name__ == "__main__":
