@@ -1,0 +1,37 @@
+version: "3.4"
+services:
+  ryan-http:
+    image: ryan77627/ryan-http:latest
+    build:
+      context: ../
+    expose:
+      - 80
+    volumes:
+      - ./example_web_files:/webroot
+    command: -p 80 -r /webroot -t -d
+
+  nginx-https-load-balance:
+    image: ryan77627/nginx-custom:latest
+    build:
+      context: ./
+      dockerfile: nginx-dockerfile
+    depends_on:
+      - ryan-http
+    volumes:
+      - ./ssl:/certs:ro
+      - ./nginx-conf/nginx-rules/https_proxy.conf:/etc/nginx/http.d/https_proxy.conf:ro
+    ports:
+      - 4444:443
+
+  modsecurity-nginx:
+    image: ryan77627/nginx-security:latest
+    build:
+      context: ./
+      dockerfile: nginx-security-dockerfile
+    depends_on:
+      - ryan-http
+    volumes:
+      - ./ssl:/certs:ro
+      - ./nginx-conf/nginx-rules/https_modsecurity.conf:/etc/nginx/http.d/https_modsecurity.conf:ro
+    ports:
+      - 4445:443

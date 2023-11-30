@@ -1,0 +1,91 @@
+FROM alpine:3.17 as builder
+
+# Some of this was inspired by https://github.com/andrewnk/docker-alpine-nginx-modsec/blob/main/Dockerfile
+
+WORKDIR /opt
+
+RUN echo "Installing build deps..." && \
+    apk add --no-cache --virtual general-dependencies \
+    autoconf \
+    automake \
+    byacc \
+    curl-dev \
+    flex \
+    g++ \
+    gcc \
+    git \
+    libc-dev \
+    libstdc++ \
+    libtool \
+    libxml2-dev \
+    linux-headers \
+    make \
+    lmdb-dev \
+    openssl-dev \
+    pcre-dev \
+    yajl-dev \
+    nginx \
+    zlib-dev
+
+# Clone modsecurity
+RUN echo "Installing Modsec" && \
+    git clone --depth 1 https://github.com/SpiderLabs/ModSecurity.git && \
+    git -C /opt/ModSecurity submodule update --init --recursive && \
+    (cd "/opt/ModSecurity" && \
+        ./build.sh && \
+        ./configure --with-lmdb && \
+        make -j`nproc` && \
+        make install \
+    ) && \
+    rm -rf /opt/ModSecurity \
+        /usr/local/modsecurity/lib/libmodsecurity.a \
+        /usr/local/modsecurity/lib/libmodsecurity.la
+
+RUN echo "Cloning NGINX and Modsec OWASP rules" && \
+    git clone -b master --depth 1 https://github.com/SpiderLabs/ModSecurity-nginx.git && \
+    git clone --depth 1 https://github.com/coreruleset/coreruleset.git /usr/local/owasp-modsecurity-crs && \
+    wget -O - https://nginx.org/download/nginx-1.23.3.tar.gz | tar -xz
+
+RUN echo "Building nginx with modules" && \
+    (cd "/opt/nginx-1.23.3" && \
+        ./configure --with-compat\
+            $(nginx -V) \
+            --add-dynamic-module=../ModSecurity-nginx && \
+        make modules -j`nproc` \
+    ) && \
+    cp /opt/nginx-1.23.3/objs/ngx_http_modsecurity_module.so \
+        /usr/lib/nginx/modules/ && \
+    rm -rf /opt/* && \
+    apk del general-dependencies
+
+FROM nginx:1.23.3-alpine as prod
+
+# Add files
+COPY --from=builder /etc/nginx /etc/nginx/
+COPY --from=builder /usr/local/modsecurity /usr/local/modsecurity
+COPY --from=builder /usr/local/owasp-modsecurity-crs /usr/local/owasp-modsecurity-crs
+COPY --from=builder /usr/lib/nginx/modules/ /usr/lib/nginx/modules/
+
+# Add config files from host
+COPY nginx-conf/nginx /etc/nginx/
+COPY nginx-conf/modsec /etc/nginx/modsec/
+COPY nginx-conf/owasp/ /usr/local/owasp-modsecurity-crs/
+
+RUN echo "Installing production dependencies" && \
+    apk add --no-cache \
+    nginx \
+    curl-dev \
+    libstdc++ \
+    libxml2-dev \
+    lmdb-dev \
+    pcre \
+    tzdata \
+    yajl && \
+    chown -R nginx:nginx /usr/share/nginx
+
+WORKDIR /usr/share/nginx/html
+
+EXPOSE 80 443
+
+STOPSIGNAL SIGQUIT
+CMD ["nginx", "-g", "daemon off;"]

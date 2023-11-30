@@ -8,5 +8,5 @@
 - [ ] Techincal Writeup
 - [ ] Example exploit
 - [ ] Anisblize
-- [ ] Dockerize
+- [x] Dockerize
 - [ ] Validation
