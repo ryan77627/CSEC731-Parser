@@ -3,7 +3,7 @@ services:
   ryan-http:
     image: ryan77627/ryan-http:latest
     build:
-      context: ../
+      context: ../Code
     expose:
       - 80
     volumes:

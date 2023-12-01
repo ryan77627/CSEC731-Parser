@@ -1,0 +1,37 @@
+---
+- name: Prepare system
+  tasks:
+    - name: Ensure php-cgi is installed
+      ansible.builtin.apt:
+        name: php8.1-cli
+        state: present
+    - name: Ensure python3 is installed
+      ansible.builtin.apt:
+        pkg:
+          - python3
+          - python3-pip
+    - name: Ensure urllib3 is installed
+      ansible.builtin.pip:
+        name: urllib3
+
+- name: Install HTTP server
+  tasks:
+    - name: Copy files to remote
+      ansible.builtin.copy:
+        src: ../Code
+        dest: /opt/http_server
+
+- name: Install boot service, enable, and start
+  tasks:
+    - name: Install boot service
+      ansible.builtin.copy:
+        src: ./ryan_http_server.service
+        dest: /etc/systemd/system
+    - name: Reload systemd to detect new service
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+    - name: Enable and immediately start server
+      ansible.builtin.systemd_service:
+        name: ryan_http_server
+        enabled: true
+        state: started

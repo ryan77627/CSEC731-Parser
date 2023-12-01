@@ -109,23 +109,24 @@ if __name__ == "__main__":
     argparser.add_argument('--certificate','-c')
     argparser.add_argument('--server-root', '-r')
     argparser.add_argument('--log-level', '-l', help=f'Set logging level. Valid levels are {logger_funcs.get_valid_levels()}. Default is INFO', default="INFO")
+    argparser.add_argument('--log-file', help="When set, log to stdout as well as the given file.")
     argparser.add_argument('--try-files', '-t', help='If set, index.html will be tried if navigating to a directory before returning either its listing or a 404.', action='store_true')
     argparser.add_argument('--allow-listings', '-d', help='If set, this will enable directory listings when navigating to a directory.', action='store_true')
     argparser.add_argument('--disable-mutation', help='If set, HTTP Requests that mutate server state (anything other than GET) will be denied.', action='store_true')
     argparser.add_argument('--disable-php', help='If set, PHP execution via php-cgi will be disabled and any php files will be returned as text files.', action='store_true')
     parsed = argparser.parse_args()
     ENABLE_TLS=False
-    logger = Logger(parsed.log_level)
+    logger = Logger(parsed.log_level, parsed.log_file)
     config.GLOBAL_VARS['logger'] = logger
     config.GLOBAL_OPTIONS["GENERATE_DIR_LISTING"] = parsed.allow_listings
     config.GLOBAL_OPTIONS["TRY_FILES"] = parsed.try_files
-    config.GLOBAL_OPTIONS["DOCUMENT_ROOT"] = pathlib.Path(parsed.server_root).absolute()
     config.GLOBAL_OPTIONS["DISABLE_SERVER_MUTATION"] = parsed.disable_mutation
     config.GLOBAL_OPTIONS["DISABLE_PHP_EXECUTION"] = parsed.disable_php
-    if not config.GLOBAL_OPTIONS["DOCUMENT_ROOT"]:
-        print("-r is required, Run -h for parameter details")
-        exit(1)
     context = None
+    try:
+        config.GLOBAL_OPTIONS["DOCUMENT_ROOT"] = pathlib.Path(parsed.server_root).absolute()
+    except TypeError:
+        logger.log("ERROR", "Unable to parse document root or possibly missing, see -h.")
 
     # Check if we need to enable TLS
     if parsed.secret_key != None or parsed.certificate != None:
