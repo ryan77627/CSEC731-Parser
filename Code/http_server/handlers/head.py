@@ -50,6 +50,8 @@ def process_req(request,version,doc_root) -> HTTPResponse:
     else:
         suppl_headers = {"Content-Type": mimetypes.guess_type(canonicalized_path)[0]}
         if canonicalized_path.exists():
+            # Get content length
+            suppl_headers["Content-Length"] = canonicalized_path.lstat().st_size
             return HTTPResponse(HTTPStatusCode.OK,version=version,content="",suppl_headers=suppl_headers)
         else:
         # Resource wasn't found

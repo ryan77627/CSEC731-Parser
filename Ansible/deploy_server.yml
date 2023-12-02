@@ -1,5 +1,7 @@
 ---
 - name: Prepare system
+  hosts: all
+  become: true
   tasks:
     - name: Ensure php-cgi is installed
       ansible.builtin.apt:
@@ -15,13 +17,25 @@
         name: urllib3
 
 - name: Install HTTP server
+  hosts: all
+  become: true
   tasks:
     - name: Copy files to remote
       ansible.builtin.copy:
         src: ../Code
-        dest: /opt/http_server
+        dest: /opt
+    - name: Rename server to proper name
+      command: mv /opt/Code /opt/http_server
+      args:
+        creates: /opt/http_server
+    - name: Copy example server files
+      ansible.builtin.copy:
+        src: ./sample_files
+        dest: /srv/www
 
 - name: Install boot service, enable, and start
+  hosts: all
+  become: true
   tasks:
     - name: Install boot service
       ansible.builtin.copy:

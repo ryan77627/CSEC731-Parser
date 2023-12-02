@@ -66,17 +66,16 @@ class HTTPRequest:
         sanitized_mid_list = [c for c in path_string if c not in bad_chars]
         # Split out query params
         p = "".join(sanitized_mid_list)
-        p = unquote(p)
         p = p.split("?")
         # Set the path
-        self.__req_path = p[0]
+        self.__req_path = unquote(p[0])
         # Set the req query params
         if len(p) >= 2: # We have at least one param
             params = p[1].split("&")
             logger.log("DEBUG", f"Request URL Parameters: {params}")
             for i in params:
                 param = i.split("=")
-                self.__req_vars[param[0]] = param[1]
+                self.__req_vars[unquote(param[0])] = unquote(param[1])
 
     def add_header(self, header):
         # Add a header to the request

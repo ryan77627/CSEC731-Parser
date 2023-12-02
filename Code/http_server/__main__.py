@@ -69,7 +69,7 @@ def process_req(data):
         req = parser.parse_http_data(req_list)
     except Exception as e:
         logger.log("ERROR", f"HTTP Parsing failure! {e}")
-        quit(1)
+        return HTTPResponse(HTTPStatusCode.INTERNAL_ERROR)
     logger.log("DEBUG", "Request successfully processed")
 
     resp_ver = req.version

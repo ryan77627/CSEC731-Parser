@@ -5,8 +5,8 @@ After=network.target
 [Service]
 Type=simple
 Restart=always
-WorkingDirectory=/opt
-ExecStart=/usr/bin/env python3 -m http_server -r /srv/www -t -d -c /opt/http_server/out.crt -s /opt/http_server/key.pem --log-file /var/log/ryan-http-server.log
+WorkingDirectory=/opt/http_server
+ExecStart=/usr/bin/env python3 -m http_server -r /srv/www -d -c /opt/http_server/out.crt -s /opt/http_server/key.pem --log-file /var/log/ryan-http-server.log
 
 [Install]
 WantedBy=multi-user.target

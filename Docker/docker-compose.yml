@@ -8,7 +8,7 @@ services:
       - 80
     volumes:
       - ./example_web_files:/webroot
-    command: -p 80 -r /webroot -t -d
+    command: -p 80 -r /webroot -d
 
   nginx-https-load-balance:
     image: ryan77627/nginx-custom:latest
